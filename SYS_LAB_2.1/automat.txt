@@ -1,45 +1,9 @@
-Alphabet: 
-a b c d e f g h i j k l 
-States: 
-s0 s1 s2  
-Start state:
-s0
-Final state: 
-s2
-Transitions: 
-s0 a s1
-s0 b s2
-s0 c s0
-s0 d s1
-s0 e s2
-s0 f s1
-s0 g s0
-s0 h s2 
-s0 i s1
-s0 j s0 
-s0 k s2 
-s0 l s1 
-s1 a s2
-s1 b s1
-s1 c s1
-s1 d s0
-s1 e s2
-s1 f s0 
-s1 g s2 
-s1 h s1 
-s1 i s2 
-s1 j s2 
-s1 k s0 
-s1 l s0
-s2 a s2
-s2 b s2
-s2 c s2
-s2 d s2
-s2 e s2
-s2 f s2 
-s2 g s2
-s2 h s2
-s2 i s2 
-s2 j s2
-s2 k s2
-S2 l s2
+2 
+4
+0
+1 2
+0 a 1
+1 a 2
+2 b 1
+1 b 3
+3 a 1

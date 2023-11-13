@@ -1,138 +1,123 @@
 ﻿#include <iostream>
-#include <fstream>
-#include <string>
-#include <cstring>
-#include <string.h>
 #include <vector>
-#include <sstream>
-#include <cmath>
-#include <algorithm>
+#include <map>
+#include <fstream>
 
-class Automat {
-private:
-    std::vector<char> alphabet; // алфавіт
-    std::vector<std::string> states; // множина станів
-    std::string startState; // початковий стан
-    std::string finalState; // фінальний стан
-    struct Transition {
-        std::string start; // початковий стан
-        std::string letter; // символ який знаходиться між --
-        std::string end; // кінцевий стан
-    };
-    std::vector<Transition> transitions;
+using namespace std;
+
+class FiniteAutomaton {
 public:
-    inline void ParseAutomat(const std::string& filename) {
-        std::ifstream file(filename);
-        std::string line;
-        if (file.is_open()) {
-            std::getline(file, line); // Читаємо рядок Aphabet: та пропускаємо його
-            std::getline(file, line); // читаємо алфавіт що на наступному рядку
-            for (char ch : line) {
-                if (ch != ' ') {
-                    alphabet.push_back(ch);
-                }
-            }
-            std::cout << "Alphabet:\n";
-            for (char c : alphabet) {
-                std::cout << c << " ";
-            }
-            std::cout << '\n';
-            std::getline(file, line); // Read States: and ignore
-            std::getline(file, line);
-            std::stringstream ss(line);
-            std::string state;
-            std::cout << "\nStates:\n";
-            while (ss >> state)
-                states.push_back(state);
-            for (const std::string& st : states) {
-                std::cout << st << " ";
-            }
-            std::cout << "\n\nStart state: ";
-            std::getline(file, line);
-            std::getline(file, line);
-            startState = line;
-            std::cout << startState << '\n';
-            std::cout << "\nFinal state: ";
-            std::getline(file, line);
-            std::getline(file, line);
-            finalState = line;
-            std::cout << finalState << '\n';
-            std::cout << "\nTransitions:\n";
-            std::getline(file, line);
-            while (std::getline(file, line)) {
-                Transition transition;
-                std::string space;
-                std::stringstream ss(line);
-                ss >> transition.start;
-                ss >> transition.letter;
-                ss >> transition.end;
-                transitions.push_back(transition);
-                std::cout << transition.start << " " << transition.letter << " " << transition.end << "\n";
-            }
-        }
-        file.close();
+    FiniteAutomaton(int alphabet, int numStates, int startState, std::vector<int> acceptingStates) {
+        numStates_ = numStates;
+        alphabet_ = alphabet;
+        startState_ = startState;
+        acceptingStates_ = acceptingStates;
+        transitions_.resize(numStates_);
+
     }
-    bool isWordAccepted(const std::string& w0) const {
-        std::string currentState = startState;
-        for (char c : w0) {
-            if (std::find(alphabet.begin(), alphabet.end(), c) == alphabet.end()) {
-                return false; // Symbol not in alphabet
-            }
-            bool transitionExist = false;
-            for (const auto& t : transitions) {
-                if (t.start == currentState && t.letter == std::string(1, c)) {
-                    currentState = t.end;
-                    transitionExist = true;
-                    break;
-                }
-            }
-            if (!transitionExist)
-                return false;
-        }
-        return currentState == finalState;
+
+    void AddTransition(int fromState, char symbol, int toState) {
+        transitions_[toState][symbol].push_back(fromState);
     }
-    bool checkForOthers(const std::string& w1, const std::string& w2) {
-        for (char c : w1) {
-            if (std::find(alphabet.begin(), alphabet.end(), c) == alphabet.end()) {
-                return false;
-            }
-        }
-        for (char c : w2) {
-            if (std::find(alphabet.begin(), alphabet.end(), c) == alphabet.end()) {
-                return false;
-            }
-        }
-        for (int len = 1; len <= 10; ++len) {
-            for (int i = 0; i < std::pow(alphabet.size(), len); i++) {
-                std::string w0;
-                int x = i;
-                for (int j = 0; j < len; j++) {
-                    w0 += alphabet[x % alphabet.size()];
-                    x /= alphabet.size();
-                }
-                if (isWordAccepted(w1 + w0 + w2)) {
-                    return true;
-                }
-            }
+
+    bool IsAcceptingState(int state) const {
+        return count(acceptingStates_.begin(), acceptingStates_.end(), state) > 0;
+    }
+
+    int GetStartState() const {
+        return startState_;
+    }
+
+
+    bool SearchMatchesDFS(int currentState, const std::string& w0, int& w0Index) {
+        if (w0Index >= w0.size())
+            return true;
+
+
+        for (int nextState : transitions_[currentState][w0[w0Index]]) {
+            w0Index++;
+            if (SearchMatchesDFS(nextState, w0, w0Index)) return true;
+            w0Index--;
         }
 
         return false;
+
     }
 
+private:
+    int numStates_;
+    int alphabet_;
+    int startState_;
+    std::vector<int> acceptingStates_;
+    std::vector<map<char, vector<int> > > transitions_;
+
 };
+
 int main() {
-    Automat at;
-    at.ParseAutomat("automat.txt");
-    std::string w1;
-    std::string w2;
-    std::cout << "Enter word w1: ";
-    std::getline(std::cin, w1);
-    std::cout << "Enter word w2: ";
-    std::getline(std::cin, w2);
-    if (at.checkForOthers(w1, w2)) {
-        std::cout << "Accepted" << '\n';
+    string fName = "automat.txt";
+    ifstream file(fName);
+    if (!file.is_open())
+    {
+        cout << "cant open file" << endl;
+        return 1;
+    }
+    int alphabet, numberOfStates, startState;
+    std::vector<int> acceptingStates;
+    file >> alphabet >> numberOfStates >> startState;
+
+    int n, a, b;
+    file >> n;
+    for (int i = 0; i < n; i++)
+    {
+        file >> a;
+        acceptingStates.push_back(a);
+    }
+
+    FiniteAutomaton automaton = FiniteAutomaton(alphabet, numberOfStates, startState, acceptingStates);
+
+    char c;
+    while (!file.eof())
+    {
+        file >> a >> c >> b;
+        automaton.AddTransition(a, c, b);
+    }
+
+    file.close();
+
+    // Перевірка чи стан прийма
+    for (int state = 0; state < 3; ++state) {
+        std::cout << "State " << state << " is accept: " << automaton.IsAcceptingState(state) << std::endl;
+    }
+
+    std::cout << "Enter word w0" << std::endl;
+
+    std::string w0 = "baaa";
+    cin >> w0;
+
+    std::string revw = "";
+    for (int i = w0.length() - 1; i >= 0; i--)
+    {
+        revw += w0[i];
+    }
+
+    // Отримую початковий стан
+
+    bool matchesW0 = false;
+    int w0ind = 0;
+    for (int i = 0; i < acceptingStates.size(); i++) {
+        matchesW0 = automaton.SearchMatchesDFS(acceptingStates[i], revw, w0ind = 0);
+        if (matchesW0) {
+            break;
+        }
+    }
+
+
+    if (matchesW0) {
+        std::cout << "Allow" << std::endl;
     }
     else {
-        std::cout << "Not Accepted" << '\n';
+        std::cout << "Not allow" << std::endl;
     }
+
+    return 0;
 }
